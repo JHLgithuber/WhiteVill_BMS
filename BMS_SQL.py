@@ -182,9 +182,9 @@ class connection():
             self.print_log()
         
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    def room_update(self, room_num, cont_date, name, phone, deposit, rent_fee, empty):
+    def room_update(self, room_num, cont_date, name, phone, deposit, rent_fee, empty, lang):
         try:
-            self.sql="UPDATE WV_BMS.ROOM_info SET cont_date='{1}', name='{2}', phone='{3}', deposit='{4}', rent_fee='{5}', empty={6} WHERE room_num='{0}'".format(room_num, cont_date, name, phone, deposit, rent_fee, empty).replace("''","NULL")
+            self.sql="UPDATE WV_BMS.ROOM_info SET cont_date='{1}', name='{2}', phone='{3}', deposit={4}, rent_fee={5}, empty={6}, language={7} WHERE room_num='{0}'".format(room_num, cont_date, name, phone, deposit, rent_fee, empty, lang).replace("''","NULL")
             self.log = self.sql+"\t\t"
             self.cursor = self.wvbms_db.cursor(pymysql.cursors.DictCursor)
             self.cursor.execute(self.sql)

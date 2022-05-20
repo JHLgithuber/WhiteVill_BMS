@@ -1,12 +1,15 @@
 from cProfile import label
+from email.policy import default
 from faulthandler import disable
 from json import load
+from optparse import Values
 #import pyautogui as pg
 import pandas as pd
 import numpy as np
 import random
 import os
 import tkinter.ttk
+from tkinter import ttk
 import tkinter as tk
 from calendar import c
 from distutils import command
@@ -28,6 +31,7 @@ from dateutil.relativedelta import relativedelta
 import BMS_SQL as sql
 
 room_num_list=[101,102,103,104,201,202,203,204,205,301,302,303,304,305]
+language_list=["한국어","영어"]
 
 #Making dataframe in auto----------------------------------------------------------------------------------------
 def mkdf_water_autocarc(waterlastdf,waterthisdf):
@@ -645,6 +649,7 @@ class paymanage_class():    #납입관리
 
 #계약---------------------------------------------------------------------------------------------
 class contmanage_class():   #계약관리
+    contlist_dict={}
     
     class cont_room():   #세대별 요금
         def __init__(self,page,room_num) -> None:
@@ -656,102 +661,94 @@ class contmanage_class():   #계약관리
             self.frame.pack(fill="both")
             self.button_room=tkinter.Button(self.frame, text=self.room_num+"호")
             self.button_room.pack(side=LEFT)
-            self.label_limit=tkinter.Label(self.frame,text="납입시한")
-            self.label_limit.pack(side=LEFT)
-            self.entry_limit=tkinter.Entry(self.frame, width=12, state='readonly')
-            self.entry_limit.pack(side=LEFT)
-            self.label_total=tkinter.Label(self.frame, text="당월 합계액")
-            self.label_total.pack(side=LEFT)
-            self.entry_total=tkinter.Entry(self.frame, width=8, state='readonly')
-            self.entry_total.pack(side=LEFT)
-            self.label_pay=tkinter.Label(self.frame, text=" 납입금액")
-            self.label_pay.pack(side=LEFT)
-            self.entry_pay=tkinter.Entry(self.frame, width=8)
-            self.entry_pay.pack(side=LEFT)
-            self.label_date=tkinter.Label(self.frame, text=" 납입일")
-            self.label_date.pack(side=LEFT)
-            self.entry_date=tkinter.Entry(self.frame, width=12)
-            self.entry_date.pack(side=LEFT)
-            self.label_method=tkinter.Label(self.frame, text=" 납입방법")
-            self.label_method.pack(side=LEFT)
-            self.entry_method=tkinter.Entry(self.frame, width=15)
-            self.entry_method.pack(side=LEFT)
-            self.label_memo=tkinter.Label(self.frame, text=" 비고")
-            self.label_memo.pack(side=LEFT)
-            self.entry_memo=tkinter.Entry(self.frame, width=15)
-            self.entry_memo.pack(side=LEFT)
-            self.button_save=tkinter.Button(self.frame, text="저장", width=8, command=self.save)
-            self.button_save.pack(side=RIGHT)
-            self.button_load=tkinter.Button(self.frame, text="불러오기",command=self.load)
-            self.button_load.pack(side=RIGHT)
-            self.button_auto=tkinter.Button(self.frame, text="납입취소",command=self.cancle,bg='pink')
-            self.button_auto.pack(side=RIGHT)
-            self.button_auto=tkinter.Button(self.frame, text="납입완료",command=self.perfect)
-            self.button_auto.pack(side=RIGHT)
+            self.var_empty = tkinter.BooleanVar()
+            self.check_empty=tkinter.Checkbutton(self.frame, variable=self.var_empty, text="공실", bg='#a3d278', onvalue=True,offvalue=False)
+            self.check_empty.pack(side=LEFT)
+            self.label_cont=tkinter.Label(self.frame,text="계약일")
+            self.label_cont.pack(side=LEFT)
+            self.entry_cont=tkinter.Entry(self.frame, width=12)
+            self.entry_cont.pack(side=LEFT)
+            self.label_name=tkinter.Label(self.frame, text="계약자명")
+            self.label_name.pack(side=LEFT)
+            self.entry_name=tkinter.Entry(self.frame, width=6)
+            self.entry_name.pack(side=LEFT)
+            self.label_phone=tkinter.Label(self.frame, text=" 전화번호")
+            self.label_phone.pack(side=LEFT)
+            self.entry_phone=tkinter.Entry(self.frame, width=12)
+            self.entry_phone.pack(side=LEFT)
+            self.label_depo=tkinter.Label(self.frame, text=" 계약금")
+            self.label_depo.pack(side=LEFT)
+            self.entry_depo=tkinter.Entry(self.frame, width=10)
+            self.entry_depo.pack(side=LEFT)
+            self.label_rent=tkinter.Label(self.frame, text=" 월세")
+            self.label_rent.pack(side=LEFT)
+            self.entry_rent=tkinter.Entry(self.frame, width=10)
+            self.entry_rent.pack(side=LEFT)
+            self.label_lang=tkinter.Label(self.frame, text=" 언어")
+            self.label_lang.pack(side=LEFT)
+            self.combo_lang=ttk.Combobox(self.frame, values=language_list, width=7)
+            self.combo_lang.current(0)
+            self.combo_lang.pack(side=LEFT)
 
-        
+       
 
         
         def load(self):
             contdf=sql.connection().room_select(self.room_num)
-            self.entry_limit.config(state='normal')
-            self.entry_total.config(state='normal')
-            self.entry_limit.delete(0,"end")
-            self.entry_total.delete(0,"end")
-            self.entry_pay.delete(0,"end")
-            self.entry_date.delete(0,"end")
-            self.entry_method.delete(0,"end")
-            self.entry_memo.delete(0,"end")
 
-            try:
-                self.entry_limit.insert(0,str(contdf.iloc[0]["cont_limit"]))
-                self.entry_total.insert(0,str(contdf.iloc[0]["total_fee"]))
-                self.entry_pay.insert(0,str(contdf.iloc[0]["paid_fee"]))
-                self.entry_date.insert(0,str(contdf.iloc[0]["paid_date"]))
-                self.entry_method.insert(0,str(contdf.iloc[0]["paid_method"]))
-                self.entry_memo.insert(0,str(contdf.iloc[0]["paid_memo"]))
-            except (IndexError,AttributeError):
-                pass
-            self.entry_limit.config(state='readonly')
-            self.entry_total.config(state='readonly')
+            self.entry_cont.delete(0,'end')
+            self.entry_name.delete(0,'end')
+            self.entry_phone.delete(0,'end')
+            self.entry_depo.delete(0,'end')
+            self.entry_rent.delete(0,'end')     
+            
+            if contdf.iloc[0]["empty"]==1:
+                self.check_empty.select()
+            else:
+                self.check_empty.deselect()
+            self.entry_cont.insert(0,str(contdf.iloc[0]["cont_date"]))
+            self.entry_name.insert(0,str(contdf.iloc[0]["name"]))
+            self.entry_phone.insert(0,str(contdf.iloc[0]["phone"]))
+            self.entry_depo.insert(0,str(contdf.iloc[0]["deposit"]))
+            self.entry_rent.insert(0,str(contdf.iloc[0]["rent_fee"]))
+            self.combo_lang.current(contdf.iloc[0]["language"])
+
         
         def save(self):
-            sql.connection().room_update(self.room_num, self.cont_date, self.name, self.phone, self.deposit, self.rent_fee, self.empty)
+            print(id(self.var_empty))
+            sql.connection().room_update(self.room_num, self.entry_cont.get(), self.entry_name.get(), self.entry_phone.get(), self.entry_depo.get(), self.entry_rent.get(), self.var_empty.get(), self.combo_lang.current())
             self.load()
 
+   
+    def load_all(self): #전체불러오기
+        print("전체불러오기: 계약정보")
+        for room_num in room_num_list:
+            self.contlist_dict[room_num].load()
+    
+    def save_all(self): #전체저장
+        print("전체저장: 계약정보")
+        for room_num in room_num_list:
+            try:
+                self.contlist_dict[room_num].save()
+            except ValueError:
+                pass
 
 
     def contmanage_popup(self):
         self.contmanage=Tk()
         self.contmanage.title("계약정보관리")
-        self.contmanage.geometry("600x550")
+        self.contmanage.geometry("850x550")
         self.select_frame=tkinter.Frame(self.contmanage)
-        self.entry_year=tkinter.Entry(self.select_frame,width=6)
-        self.entry_year.pack(side=LEFT)
-        self.label_year=tkinter.Label(self.select_frame, text="년도 ")
-        self.label_year.pack(side=LEFT)
-        self.entry_month=tkinter.Entry(self.select_frame,width=4)
-        self.entry_month.pack(side=LEFT)
-        self.label_month=tkinter.Label(self.select_frame, text="월")
-        self.label_month.pack(side=LEFT)
-        self.button_inquiry=tkinter.Button(self.select_frame, text="조회", command=self.load_inquiry)
-        self.button_inquiry.pack(side=LEFT)
-        self.label_blank=tkinter.Label(self.select_frame,text="\t")
-        self.label_blank.pack(side=LEFT)
-        self.button_prev=tkinter.Button(self.select_frame, text="이전", width=10, command= self.load_prev)
-        self.button_prev.pack(side=LEFT)
-        self.button_next=tkinter.Button(self.select_frame, text="다음", width=10, command= self.load_next)
-        self.button_next.pack(side=LEFT)
-        self.button_allsave=tkinter.Button(self.select_frame, text="전체저장", command=self.save_all)
+        self.button_allsave=tkinter.Button(self.select_frame, text="저장", command=self.save_all)
         self.button_allsave.pack(side=RIGHT)
-        self.button_allload=tkinter.Button(self.select_frame, text="전체불러오기", command=self.load_all)
+        self.button_allload=tkinter.Button(self.select_frame, text="불러오기", command=self.load_all)
         self.button_allload.pack(side=RIGHT)
         self.select_frame.pack(side=TOP, ipadx=30, ipady=10)
         
         for room_num in room_num_list:
             self.contlist_dict[room_num]=self.cont_room(self.contmanage,str(room_num))
             self.contlist_dict[room_num].show_cont()
-        
+
         self.load_all()
 
 
